@@ -3,13 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
-	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
@@ -40,7 +37,7 @@ func main() {
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
 	// Cleanly close down the Discord session.
@@ -58,112 +55,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	reg, err := regexp.Compile(`https:\/\/vm\.tiktok\.com\/(.*)\/`)
-	if err != nil {
-		log.Fatalf("Error compiling regular expression %v", err)
-		return
-	}
-
-	// see if url matches regex pattern
-	match := reg.FindString(m.Content)
-
-	if match != "" {
-
-		req, err := http.NewRequest("GET", match, nil)
-
+	if tiktokUrl, err := isTiktokUrl(m.Content, client); tiktokUrl != "" {
 		if err != nil {
-			log.Fatalf("Error creating HTTP Request %v", err)
-			return
+			log.Fatalf("Error retrieving tiktok URL: %v", nil)
 		}
-
-		// convert shortened request to longer tiktok url for scraping
-		headers := map[string]string{"Cookie": "69tikiman69", "User-Agent": "BOBKILL", "Referer": match}
-
-		req.Header.Set("User-Agent", headers["User-Agent"])
-		req.Header.Set("Cookie", headers["Cookie"])
-		req.Header.Set("Referer", headers["Referer"])
-
-		res, err := client.Do(req)
-
+		videoBytes, err := getTiktokVideo(tiktokUrl, client)
 		if err != nil {
-			log.Fatalf("Error doing the HTTP request %v", err)
-			return
-		}
-
-		longUrl := strings.Split(res.Request.URL.String(), "?")[0]
-		req, err = http.NewRequest("GET", longUrl, nil)
-
-		if err != nil {
-			log.Fatalf("Error creating longUrl request %v", err)
-			return
-		}
-
-		req.Header.Set("User-Agent", headers["User-Agent"])
-		req.Header.Set("Cookie", headers["Cookie"])
-		req.Header.Set("Referer", headers["Referer"])
-
-		res, err = client.Do(req)
-
-		if err != nil {
-			log.Fatalf("Error doing the longUrl HTTP request %v", err)
-			return
-		}
-
-		body, err := ioutil.ReadAll(res.Body)
-
-		if err != nil {
-			log.Fatalf("Error reading response body: %v", err)
-			return
-		}
-
-		bodyReplaced := strings.ReplaceAll(string(body), "amp;", "")
-
-		videoUrlRegEx, err := regexp.Compile(`content="(https://[^w-w]{3}(.*?)tiktok\.com/video/tos(.*?)&vr=)`)
-		if err != nil {
-			log.Fatalf("Error compiling regular expression 2: %v", err)
-			return
-		}
-
-		videoUrlMatches := videoUrlRegEx.FindAllStringSubmatch(bodyReplaced, 1)
-		if len(videoUrlMatches) == 0 {
-			log.Fatalf("No matches for videoUrlRegex: %v", videoUrlMatches)
-		}
-
-		videoUrl := videoUrlMatches[0][1]
-
-		fileBytes, err := GetVideo(videoUrl, headers, client)
-		if err != nil {
-			log.Fatalf("Error downloading video: %v", err)
+			log.Fatalf("Error getting tiktok video: %v", err)
 		}
 		fmt.Println("Sending the video!")
-
-		s.ChannelFileSend(m.ChannelID, "video.mp4", bytes.NewReader(fileBytes))
+		s.ChannelFileSend(m.ChannelID, "video.mp4", bytes.NewReader(videoBytes))
 	}
-
-}
-
-func GetVideo(url string, headers map[string]string, client *http.Client) ([]byte, error) {
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("User-Agent", headers["User-Agent"])
-	req.Header.Set("Cookie", headers["Cookie"])
-	req.Header.Set("Referer", headers["Referer"])
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	fileBytes, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return fileBytes, err
 }
