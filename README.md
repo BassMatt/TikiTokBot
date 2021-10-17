@@ -8,7 +8,7 @@ Click  to invite the bot [![Discord](https://badgen.net/badge/icon/discord?icon=
 
 To run this project, you will need to add the following environment variables
 
-`DISCORD_TOKEN` should be set to the bot's client secret which can be found at the [Discord Developer Portal](https://discord.com/developers/applications)
+`DISCORD_TOKEN` should be set to the bot's client secret which can be found in the [Discord Developer Portal](https://discord.com/developers/applications)
 
 ## Authors
 
