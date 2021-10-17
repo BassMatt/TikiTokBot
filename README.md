@@ -16,4 +16,4 @@ To run this project, you will need to add the following environment variables
 - [@AndrewHosang](https://www.github.com/AndrewHosang)
 - [@lockr7](https://www.github.com/lockr7)
 - [@ezulu](https://www.github.com/ezulu)
-  
+- [@evanzlock](https://www.github.com/evanzlock)
