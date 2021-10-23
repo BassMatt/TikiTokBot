@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + os.Getenv("DISCORD_TOKEN"))
 	if err != nil {
-		fmt.Println("error creating Discord session,", err)
+		log.Fatalf("error creating Discord session,", err)
 		return
 	}
 
@@ -30,7 +30,7 @@ func main() {
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("error opening connection,", err)
+		log.Fatalf("error opening connection,", err)
 		return
 	}
 
@@ -56,6 +56,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if tiktokUrl, err := isTiktokUrl(m.Content, client); tiktokUrl != "" {
+		// Matched a tiktok url
+		log.Debugf("Matched a tiktok url: %v", tiktokUrl)
+
 		if err != nil {
 			log.Fatalf("Error retrieving tiktok URL: %v", nil)
 		}

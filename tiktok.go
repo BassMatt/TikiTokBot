@@ -11,7 +11,7 @@ import (
 var headers = make(map[string]string)
 
 func init() {
-	headers = map[string]string{"Cookie": "69tikiman69", "User-Agent": "BOBKILL", "Referer": "www.tiktok.com"}
+	headers = map[string]string{"Cookie": "69tikiman69", "User-Agent": "BOBKILL"}
 }
 
 // Returns empty string if the message matches,
@@ -28,7 +28,7 @@ func isLongTiktokUrl(message string) string {
 }
 
 func isTiktokUrl(message string, client *http.Client) (string, error) {
-	if url := isShortTiktokUrl(message); url != "" {
+	if url := isShortTiktokUrl(message); url != "" { // check if url is of type vm.tiktok
 		longUrl, err := transformShortUrl(url, client)
 		if err != nil {
 			return "", err
