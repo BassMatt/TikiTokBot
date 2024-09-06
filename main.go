@@ -24,8 +24,8 @@ func main() {
 		return
 	}
 
-	// Register the messageCreate func as a callback for MessageCreate events.
-	dg.AddHandler(messageCreate)
+	// Register the messageLIstener func as a callback for MessageCreate events.
+	dg.AddHandler(messageListener)
 
 	// Listen for receiving message events.
 	dg.Identify.Intents = discordgo.IntentsGuildMessages
@@ -47,9 +47,19 @@ func main() {
 	dg.Close()
 }
 
+type TiktokClient struct {
+	MessageListener(s *discordgo.Session, m *discordgo.MessageCreate),
+}
+
+
+func NewClient(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+}
+
+
 // This function will be called (due to AddHandler above) every time a new
 // message is created on any channel that the authenticated bot has access to.
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+func MessageListener(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	client := &http.Client{}
 	// Ignore all messages created by the bot itself
@@ -76,12 +86,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		// convert shortened request to longer tiktok url for scraping
-		headers := map[string]string{"Cookie": "69tikiman69", "User-Agent": "BOBKILL", "Referer": match}
-
-		req.Header.Set("User-Agent", headers["User-Agent"])
-		req.Header.Set("Cookie", headers["Cookie"])
-		req.Header.Set("Referer", headers["Referer"])
+		// Use Default Parameters set
+		defaultHeaders := map[string]string{
+			"Host":       "t.tiktok.com",
+			"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0",
+			"Referer":    "https://www.tiktok.com/",
+			"Cookie":     "tt_webid_v2=6913027209393473025; tt_webid=6913027209393473025",
+		}
 
 		res, err := client.Do(req)
 
